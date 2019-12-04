@@ -1,6 +1,5 @@
 library(tidyverse)
-possible_range <- c(234208, 765869)
-all_nums <- possible_range[1]:possible_range[2]
+all_nums <- 234208:765869
 all_nums_splitted <- split_el(all_nums)
 
 ## Part 1
