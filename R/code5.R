@@ -11,7 +11,7 @@ take_new_step <- function(x, input_code_pos = 0, input_value) {
   print(input_code)
   print(input_code_pos)
   input_code_pos <- update_input_code_pos(x, input_code, input_code_pos)
-  take_new_step(x, input_code_pos)
+  take_new_step(x, input_code_pos, input_value)
 }
 
 create_input_code <- function(raw_input) {
