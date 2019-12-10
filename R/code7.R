@@ -1,8 +1,10 @@
 source("R/code5.R")
 library(tidyverse)
-x <- c(3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,
-       27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5)
-
+x <- c(3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,
+       -5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,
+       53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10)
+phases = c(9,7,8,5,6)
+139629729
 
 data7 <- {readLines("data/data7") %>% str_split(",")}[[1]] %>% 
   as.numeric()
@@ -13,22 +15,33 @@ combinat::permn(0:4) %>%
   max
 
 # Part 2
-loop_amplifiers <- function(x, phases, first_in_val = 0) {
-  last_out_val <- run_all_amplifiers(x, phases, first_in_val)
-  print(last_out_val)
-  loop_amplifiers(x, phases, last_out_val)
+loop_amplifiers <- function(x, phases, first_in_val = 0, use_phases = TRUE) {
+  last_out_val <- run_all_amplifiers(x, phases, first_in_val, use_phases)
+  x = last_out_val$x
+  first_in_val = last_out_val$v
+  use_phases = FALSE
+  
+  loop_amplifiers(last_out_val$x, phases, last_out_val$v, use_phases = FALSE)
 }
 
-run_all_amplifiers <- function(x, phases, first_in_val = 0) {
-  out_val_A <- take_new_step(x, phase_setting = phases[1], input_value = first_in_val)
-  out_val_B <- take_new_step(x, phase_setting = phases[2], input_value = out_val_A)
-  out_val_C <- take_new_step(x, phase_setting = phases[3], input_value = out_val_B)
-  out_val_D <- take_new_step(x, phase_setting = phases[4], input_value = out_val_C)
-  take_new_step(x, phase_setting = phases[5], input_value = out_val_D)
+run_all_amplifiers <- function(x, phases, first_in_val = 0, use_phases = TRUE) {
+  if (!is.list(x)) {
+    x1 <- x2 <- x3 <- x4 <- x5 <- x
+  } else {
+   x1 <- x[[1]]; x2 <- x[[2]]; x3 <- x[[3]]; x4 <- x[[4]]; x5 <- x[[5]] 
+  }
+  out_val_A <- take_new_step(x1, phase_setting = ifelse(use_phases, phases[1], first_in_val), input_value = first_in_val)
+  print("Done with A")
+  out_val_B <- take_new_step(x2, phase_setting = ifelse(use_phases, phases[2], out_val_A$v), input_value = out_val_A$v)
+  out_val_C <- take_new_step(x3, phase_setting = ifelse(use_phases, phases[3], out_val_B$v), input_value = out_val_B$v)
+  out_val_D <- take_new_step(x4, phase_setting = ifelse(use_phases, phases[4], out_val_C$v), input_value = out_val_C$v)
+  out_val_E <- take_new_step(x5, phase_setting = ifelse(use_phases, phases[5], out_val_D$v), input_value = out_val_D$v)
+  list(v = out_val_E$v,
+       x = list(out_val_A$x, out_val_B$x, out_val_C$x, out_val_D$x, out_val_E$x))
 }
 
 
-take_new_step <- function(x, 
+take_new_step <- trampoline(function(x, 
                           input_code_pos = 0, 
                           phase_setting, 
                           input_value, 
@@ -36,7 +49,7 @@ take_new_step <- function(x,
                           last_out_val = NULL) {
   input_code <- create_input_code(x[i(input_code_pos)])
   check_valid_opcode(input_code$opcode)
-  if (input_code$opcode == 99) return(last_out_val)
+  if (input_code$opcode == 99) return(list(v = last_out_val, x = x))
   if (input_code$opcode == 4) {
     pars <- x[i(input_code_pos) + 1:3]
     last_out_val <- get_new_val(x, input_code, pars)
@@ -46,8 +59,9 @@ take_new_step <- function(x,
   }
   input_code_pos <- update_input_code_pos(x, input_code, input_code_pos)
   if (input_code$opcode == 3 & state == 1) state <- 2
+  print(input_code_pos)
   take_new_step(x, input_code_pos, phase_setting, input_value, state, last_out_val)
-}
+})
 
 create_input_code <- function(raw_input) {
   list(
@@ -104,3 +118,16 @@ update_input_code_pos <- function(x, input, pos) {
   if (opcode == 6) return(ifelse(eval_par == 0, jump_to, pos + 3))
 }
 
+trampoline <- function(f) {
+  function(...) {
+    ret <- f(...)
+    while (inherits(ret, "recursion")) {
+      ret <- eval(as.call(c(f, unclass(ret))))
+    }
+    ret
+  }
+}
+
+recur <- function(...) {
+  structure(list(...), class = "recursion")
+}
