@@ -79,6 +79,16 @@ astroid_grid_rebased <- astroid_grid_0 %>%
   mutate(row = row - 21, column = 20 - column) %>% 
   filter(!(row == 0 & column == 0))
 
+find_200th(astroid_grid_rebased)
+-10 + 21
+18+ 3
+
+find_200th <- function(x) {
+  vap_df <- initialise(x)
+  x <- drop_next(x, vap_df)
+  remove_next_astroid(x, last_vap = as.numeric(vap_df), vap_df)
+}
+
 initialise <- function(x) {
   x %>% 
     filter(row == 0, column > 0) %>% 
@@ -89,19 +99,12 @@ drop_next <- function(x, vap) {
   x %>% filter(!(row == vap[[1]] & column == vap[[2]]))
 }
 
-vaporize_that_shit <- function(x) {
-  vap_df <- initialise(x)
-  x <- drop_next(x, vap)
-  remove_next_astroid(x, last_vap = as.numeric(vap_df), vap_df)
-}
-
 remove_next_astroid <- function(x, last_vap, vap_df) {
-  print(vap_df)
   next_astroid <- find_next_astroid(x, last_vap)
   vap_df <- bind_rows(vap_df, tibble(row = next_astroid[1], column = next_astroid[2]))
   x <- drop_next(x, next_astroid)
-  if (nrow(x) == 0) return(vap_df %>% mutate(order = row_number()))
-  remove_next_astroid(x, next_astroid, vap_df)
+  if (nrow(vap_df) == 200) return(tail(vap_df, 1))
+  remove_next_astroid(x, last_vap = next_astroid, vap_df)
 }
 
 find_next_astroid <- function(x, cur) {
@@ -109,7 +112,7 @@ find_next_astroid <- function(x, cur) {
   splitted <- map(split(x, rownames(x)), as.numeric)
   angles <- map_dbl(splitted, ~find_angle(cur, .x))
   angles_in_scope <- angles[map_lgl(splitted, ~to_the_right(cur, .x))]
-  candidate <- splitted[[which.min(angles[angles != 0]) %>% names() %>% as.numeric()]]
+  candidate <- splitted[[which.min(angles_in_scope[angles_in_scope != 0]) %>% names()]]
   if (is_visible(cur, candidate, x)) return(candidate)
   find_next_astroid(x %>% filter(!(row != candidate[1] & column != candidate[2])), cur)
 }
