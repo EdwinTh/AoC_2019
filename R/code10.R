@@ -11,7 +11,7 @@ astroid_grid <- map2_dfr(data10, 1:length(data10), line_to_grid) %>%
 
 # part 1
 nr_visible_by_pos <- map_int(1:nrow(astroid_grid), ~nr_visible(.x, astroid_grid))
-which.max(nr_visible_by_pos)
+which.max(nr_visible_by_pos) # 293
 max(nr_visible_by_pos)
 
 nr_visible <- function(loc, gr) {
@@ -86,37 +86,45 @@ initialise <- function(x) {
 }
 
 drop_next <- function(x, vap) {
-  x %>% filter(!(row == vap$row & column == vap$column))
+  x %>% filter(!(row == vap[[1]] & column == vap[[2]]))
 }
 
 vaporize_that_shit <- function(x) {
-  vap <- initialise(x)
+  vap_df <- initialise(x)
   x <- drop_next(x, vap)
-  
+  remove_next_astroid(x, last_vap = as.numeric(vap_df), vap_df)
 }
 
-remove_next_astroid <- function(x, r = 2, co = 0) {
-  
-  x <- x %>% filter(column == column, row)
+remove_next_astroid <- function(x, last_vap, vap_df) {
+  print(vap_df)
+  next_astroid <- find_next_astroid(x, last_vap)
+  vap_df <- bind_rows(vap_df, tibble(row = next_astroid[1], column = next_astroid[2]))
+  x <- drop_next(x, next_astroid)
+  if (nrow(x) == 0) return(vap_df %>% mutate(order = row_number()))
+  remove_next_astroid(x, next_astroid, vap_df)
 }
 
-next_astroid <- function(x, cur) {
-  x_to_the_right <- all_x_to_the_right(x, cur)
+find_next_astroid <- function(x, cur) {
+  cur <- as.numeric(cur)
   splitted <- map(split(x, rownames(x)), as.numeric)
   angles <- map_dbl(splitted, ~find_angle(cur, .x))
-  splitted[[which.min(angles[angles != 0]) %>% names() %>% as.numeric()]]
-  splitted[[210]]
-}
-
-all_x_to_the_right <- function(x, cur) {
-  cur_row <- sign(cur[1])
-  cur_col <- sign(cur[2])
+  angles_in_scope <- angles[map_lgl(splitted, ~to_the_right(cur, .x))]
+  candidate <- splitted[[which.min(angles[angles != 0]) %>% names() %>% as.numeric()]]
+  if (is_visible(cur, candidate, x)) return(candidate)
+  find_next_astroid(x %>% filter(!(row != candidate[1] & column != candidate[2])), cur)
 }
 
 find_angle <- function(c1, c2) {
   mag1 <- sqrt(sum(c1 ^ 2))
   mag2 <- sqrt(sum(c2 ^ 2))
-  dot_prod = c1[1] * c2[1] + c1[2] * c2[2]
+  dot_prod <- c1[1] * c2[1] + c1[2] * c2[2]
   acos(dot_prod / (mag1 * mag2))
 }
+
+to_the_right <- function(c1, c2) {
+  # https://stackoverflow.com/questions/13221873/
+  dot_prod <- c1[1] * -c2[2] + c1[2] * c2[1]
+  dot_prod > 0
+}
+
 
