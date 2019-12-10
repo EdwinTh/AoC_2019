@@ -1,12 +1,12 @@
 library(tidyverse)
-data8 <- readLines("data/data8") %>% str_split("") %>% unlist() %>% as.numeric()
+data8 <- readLines("data/data8") %>% str_split("") %>% unlist()
 
 # part1
 full_mat <- matrix(data8, ncol = 25, byrow = TRUE)
-splitted <- map(1:(nrow(full_mat) / 6),
+splitted <- map(seq(1,nrow(full_mat), by = 6),
                 ~full_mat[.x:(.x + 5), ])
 lowest_0 <- map_dbl(splitted, ~sum(.x == 0)) %>% which.min()
-sum(splitted[[43]] == 1) * sum(splitted[[43]] == 2)
+sum(splitted[[lowest_0]] == 1) * sum(splitted[[lowest_0]] == 2)
 
 # part2
 splitted[[1]]
@@ -25,8 +25,8 @@ map2(splitted, 1:100, function(x, y) {
   mutate(row = abs(row - 7)) %>% 
   ggplot(aes(col, row, fill = as.character(val)), color = "black") +
   geom_tile() +
-  scale_fill_manual(values = c("black", "white"))
-
+  scale_fill_manual(values = c("white", "black"))
+              
   
   
   
