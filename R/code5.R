@@ -8,8 +8,6 @@ take_new_step <- function(x, input_code_pos = 0, input_value) {
   check_valid_opcode(input_code$opcode)
   if (input_code$opcode == 99) return(x)
   x <- update_x(x, input_code_pos, input_code, input_value)
-  print(input_code)
-  print(input_code_pos)
   input_code_pos <- update_input_code_pos(x, input_code, input_code_pos)
   take_new_step(x, input_code_pos, input_value)
 }

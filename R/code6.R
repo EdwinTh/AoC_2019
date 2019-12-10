@@ -30,4 +30,7 @@ find_orbits <- function(gr, start, leafs) {
 }
 
 # Part 2
-
+data6 %>% filter(orbit %in%  c("YOU", "SAN"))
+(graph_from_data_frame(data6, directed = FALSE) %>% 
+  all_shortest_paths(from = "JZL", to = "SJM"))$res[[1]] %>% 
+  length() 
