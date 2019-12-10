@@ -74,9 +74,44 @@ drop_first_last <- function(x) x[2:(length(x) -1)]
 # part 2
 astroid_grid_0 <- astroid_grid %>% 
   mutate(row = row - 1, column = column - 1)
-astroid_grid_0[293, ]
-astroid_grid_rebase <- astroid_grid_0 %>% 
-  mutate(row = row - 21, column = column - 20)
+
+astroid_grid_rebased <- astroid_grid_0 %>% 
+  mutate(row = row - 21, column = 20 - column) %>% 
+  filter(!(row == 0 & column == 0))
+
+initialise <- function(x) {
+  x %>% 
+    filter(row == 0, column > 0) %>% 
+    filter(column == min(column))
+}
+
+drop_next <- function(x, vap) {
+  x %>% filter(!(row == vap$row & column == vap$column))
+}
+
+vaporize_that_shit <- function(x) {
+  vap <- initialise(x)
+  x <- drop_next(x, vap)
+  
+}
+
+remove_next_astroid <- function(x, r = 2, co = 0) {
+  
+  x <- x %>% filter(column == column, row)
+}
+
+next_astroid <- function(x, cur) {
+  x_to_the_right <- all_x_to_the_right(x, cur)
+  splitted <- map(split(x, rownames(x)), as.numeric)
+  angles <- map_dbl(splitted, ~find_angle(cur, .x))
+  splitted[[which.min(angles[angles != 0]) %>% names() %>% as.numeric()]]
+  splitted[[210]]
+}
+
+all_x_to_the_right <- function(x, cur) {
+  cur_row <- sign(cur[1])
+  cur_col <- sign(cur[2])
+}
 
 find_angle <- function(c1, c2) {
   mag1 <- sqrt(sum(c1 ^ 2))
@@ -85,12 +120,3 @@ find_angle <- function(c1, c2) {
   acos(dot_prod / (mag1 * mag2))
 }
 
-astroid_grid_rebase %>% 
-  filter(row == 0, column > 0)
-
-astroid_grid_rebase %>% 
-  filter(row > 0, column > 0) %>%
-  
-  mutate(angle = find_angle(c(0, 1), c2 = c(row, column)))
-
-map(find_angle)
