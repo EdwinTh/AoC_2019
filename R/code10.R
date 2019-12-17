@@ -1,6 +1,6 @@
 library(tidyverse)
 data10 <- readLines("data/data10")
-data10 <- readLines("data/tmp")
+# data10 <- readLines("data/tmp")
 line_to_grid <- function(line, row = 1) {
   astroid <- unlist(str_split(line, "")) == "#"
   tibble(x = 0:(length(astroid)-1), y = row, astroid = astroid)
@@ -83,7 +83,7 @@ astroid_grid_rebased <- astroid_grid %>%
   mutate(x = x - 11, y = 13 - y) %>% 
   filter(!(x == 0 & y == 0))
 astroid_grid_rebased -> df
-find_200th(astroid_grid_rebased)
+find_200th(astroid_grid_rebased) %>% tail()
 
 find_200th <- function(df) {
   vap_df <- initialise(df)
@@ -106,10 +106,7 @@ remove_next_astroid <- function(df, last_vap, vap_df) {
   next_astroid <- find_next_astroid(df, last_vap)
   vap_df <- bind_rows(vap_df, tibble(x = next_astroid[1], y = next_astroid[2]))
   df <- drop_next(df, next_astroid)
-  last_vap = next_astroid
-  vap_df %>% map_back_vap_df()
-  
-  if (nrow(vap_df) == 200) return(vap_df %>% map_back_vap_df())
+  if (nrow(vap_df) == 200) return(vap_df %>% map_back_vap_df(x_base = 11, y_base = 13))
   remove_next_astroid(df, last_vap = next_astroid, vap_df)
 }
 
